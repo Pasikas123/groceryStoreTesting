@@ -53,7 +53,11 @@ https://www.linkedin.com/in/donatasdailide/
 
 ## Version History
 
-* 0.2
+* 0.4
+    * Added README.md
+* 0.3
     * Edited baseURL to work
+* 0.2
+    * Optimized some tests
 * 0.1
     * Initial Commit
