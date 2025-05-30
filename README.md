@@ -28,7 +28,7 @@ All tests were organized using Postman collections and environment variables for
 
 ### Installing
 
-1. Clone this project into Visual Studio Code: https://github.com/Pasikas123/groceryStoreTesting.git
+1. Clone this project into Visual Studio Code: https://github.com/ddailide/groceryStoreTesting.git
 2. Open Postman program
 3. Open any workspace you'd like
 4. Press import and choose cloned "Simple Grocery Store API.postman_collection.json" file.
@@ -42,7 +42,7 @@ All tests were organized using Postman collections and environment variables for
 ## Authors
 
 Donatas Dailidė
-@Pasikas123
+@ddailide
 https://www.linkedin.com/in/donatasdailide/
 
 ## 🔧 Tools Used
