@@ -2198,8 +2198,7 @@
 										"exec": [
 											"pm.test(\"Status code is 204\", function () {\r",
 											"    pm.response.to.have.status(204);\r",
-											"});\r",
-											""
+											"});"
 										],
 										"type": "text/javascript",
 										"packages": {}
@@ -7646,7 +7645,7 @@
 	"variable": [
 		{
 			"key": "baseURL",
-			"value": "",
+			"value": "https://simple-grocery-store-api.glitch.me",
 			"type": "string"
 		},
 		{
