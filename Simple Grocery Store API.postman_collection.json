@@ -71,6 +71,15 @@
 											"script": {
 												"exec": [
 													"const responseBody = pm.response.json();\r",
+													"const setId = pm.collectionVariables.set('setId', responseBody[0].id);\r",
+													"const replaceId = pm.collectionVariables.set('replaceId', responseBody[1].id);\r",
+													"\r",
+													"const notInStock = responseBody.forEach((item) => {\r",
+													"    if (item.inStock === false) {\r",
+													"        pm.collectionVariables.set('notInStock', item.id);\r",
+													"    };\r",
+													"});\r",
+													"\r",
 													"\r",
 													"pm.test(\"Status code is 200\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
@@ -1136,8 +1145,7 @@
 											"script": {
 												"exec": [
 													"const responseBody = pm.response.json();\r",
-													"const setId = pm.collectionVariables.set('setId', responseBody.id);\r",
-													"\r",
+													"pm.collectionVariables.set('currentStock', responseBody['current-stock']);\r",
 													"\r",
 													"pm.test(\"Status code is 200\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
@@ -1152,7 +1160,8 @@
 													"    pm.expect(responseBody).to.have.property('price').to.be.a('number').and.is.not.null;\r",
 													"    pm.expect(responseBody).to.have.property('current-stock').to.be.a('number').and.is.not.null;\r",
 													"    pm.expect(responseBody).to.have.property('inStock').to.be.a('boolean').and.is.not.null;\r",
-													"});"
+													"});\r",
+													""
 												],
 												"type": "text/javascript",
 												"packages": {}
@@ -1163,13 +1172,19 @@
 										"method": "GET",
 										"header": [],
 										"url": {
-											"raw": "{{baseURL}}/products/{{setId}}",
+											"raw": "{{baseURL}}/products/:productId",
 											"host": [
 												"{{baseURL}}"
 											],
 											"path": [
 												"products",
-												"{{setId}}"
+												":productId"
+											],
+											"variable": [
+												{
+													"key": "productId",
+													"value": "{{setId}}"
+												}
 											]
 										}
 									},
@@ -1188,8 +1203,6 @@
 											"script": {
 												"exec": [
 													"const responseBody = pm.response.json();\r",
-													"const setId = pm.collectionVariables.set('setId', responseBody.id);\r",
-													"\r",
 													"\r",
 													"pm.test(\"Status code is 200\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
@@ -1205,7 +1218,33 @@
 													"    pm.expect(responseBody).to.have.property('current-stock').to.be.a('number').and.is.not.null;\r",
 													"    pm.expect(responseBody).to.have.property('inStock').to.be.a('boolean').and.is.not.null;\r",
 													"    pm.expect(responseBody).to.have.property('product-label').to.be.a('string').and.contains('pdf');\r",
-													"});"
+													"});\r",
+													"\r",
+													"pm.test(\"Content-Type is application/pdf\", function () {\r",
+													"    pm.responseBody.to.have.header(\"Content-Type\", \"application/pdf\");\r",
+													"});\r",
+													"\r",
+													"\r",
+													"// // 1. Įsitikinkite, kad antraštė egzistuoja\r",
+													"// pm.test(\"Turi Content-Disposition antraštę\", function () {\r",
+													"//     pm.responseBody.to.have.header(\"Content-Disposition\");\r",
+													"// });\r",
+													" \r",
+													"// // 2. Gautą antraštę patikrinkite pagal lūkestį (pvz., attachment su konkretų PDF pavadinimą)\r",
+													"// pm.test(\"Content-Disposition teisinga\", function () {\r",
+													"//     // Gauname header vertę\r",
+													"//     const contentDisp = pm.responseBody.headers.get(\"Content-Disposition\");\r",
+													"//     // Tikriname, kad būtų attachment ir .pdf\r",
+													"//     pm.expect(contentDisp).to.match(/^attachment;\\s*filename=\".*\\.pdf\"$/);\r",
+													"// });\r",
+													" \r",
+													"// // 3. Jeigu norite patikrinti tik failo vardą\r",
+													"// pm.test(\"Failo vardas teisingas\", function () {\r",
+													"//     const contentDisp = pm.responseBody.headers.get(\"Content-Disposition\");\r",
+													"//     // Išskiriame filename reikšmę\r",
+													"//     const filename = contentDisp.match(/filename=\"(.+)\"/)[1];\r",
+													"//     pm.expect(filename).to.eql(\"product-123-label.pdf\");\r",
+													"// });"
 												],
 												"type": "text/javascript",
 												"packages": {}
@@ -1242,8 +1281,6 @@
 											"script": {
 												"exec": [
 													"const responseBody = pm.response.json();\r",
-													"const setId = pm.collectionVariables.set('setId', responseBody.id);\r",
-													"\r",
 													"\r",
 													"pm.test(\"Status code is 200\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
@@ -1620,7 +1657,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\r\n    \"productId\": 4643,\r\n    \"quantity\": 10\r\n}",
+									"raw": "{\r\n    \"productId\": {{setId}},\r\n    \"quantity\": 10\r\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -1628,14 +1665,20 @@
 									}
 								},
 								"url": {
-									"raw": "{{baseURL}}/carts/{{cartId}}/items",
+									"raw": "{{baseURL}}/carts/:cartId/items",
 									"host": [
 										"{{baseURL}}"
 									],
 									"path": [
 										"carts",
-										"{{cartId}}",
+										":cartId",
 										"items"
+									],
+									"variable": [
+										{
+											"key": "cartId",
+											"value": "{{cartId}}"
+										}
 									]
 								}
 							},
@@ -1888,7 +1931,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"productId\": 5851,\r\n    \"quantity\": 10\r\n}",
+											"raw": "{\r\n    \"productId\": {{notInStock}},\r\n    \"quantity\": 10\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -1945,7 +1988,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"productId\": 3674,\r\n    \"quantity\": -1\r\n}",
+											"raw": "{\r\n    \"productId\": {{setId}},\r\n    \"quantity\": -1\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -1967,7 +2010,7 @@
 									"response": []
 								},
 								{
-									"name": "Add an item with 100 quantity",
+									"name": "Add an item in stock + 1",
 									"event": [
 										{
 											"listen": "test",
@@ -1990,6 +2033,18 @@
 												"type": "text/javascript",
 												"packages": {}
 											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"const currentStock = pm.collectionVariables.get('currentStock');\r",
+													"const tooMany = currentStock + 1;\r",
+													"pm.collectionVariables.set('tooMany', tooMany);"
+												],
+												"type": "text/javascript",
+												"packages": {}
+											}
 										}
 									],
 									"request": {
@@ -1997,7 +2052,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"productId\": 2585,\r\n    \"quantity\": 100\r\n}",
+											"raw": "{\r\n    \"productId\": {{setId}},\r\n    \"quantity\": {{tooMany}}\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -2049,7 +2104,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"productId\": 2585,\r\n    \"quantity\": true\r\n}",
+											"raw": "{\r\n    \"productId\": {{setId}},\r\n    \"quantity\": true\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -2071,7 +2126,7 @@
 									"response": []
 								},
 								{
-									"name": "Add an item with boolean into quantity Copy",
+									"name": "Add an item with string into quantity",
 									"event": [
 										{
 											"listen": "test",
@@ -2101,7 +2156,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"productId\": 8739,\r\n    \"quantity\": \"kazkas\"\r\n}",
+											"raw": "{\r\n    \"productId\": {{setId}},\r\n    \"quantity\": \"kazkas\"\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -2918,7 +2973,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\r\n    \"productId\": 4643,\r\n    \"quantity\": 2\r\n}",
+									"raw": "{\r\n    \"productId\": {{replaceId}},\r\n    \"quantity\": 2\r\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -2979,7 +3034,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"productId\": 4643,\r\n    \"quantity\": 2\r\n}",
+											"raw": "{\r\n    \"productId\": {{setId}},\r\n    \"quantity\": 2\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -3032,7 +3087,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"productId\": 4643,\r\n    \"quantity\": 2\r\n}",
+											"raw": "{\r\n    \"productId\": {{setId}},\r\n    \"quantity\": 2\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -3084,7 +3139,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"productId\": 4643,\r\n    \"quantity\": 2\r\n}",
+											"raw": "{\r\n    \"productId\": {{setId}},\r\n    \"quantity\": 2\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -3137,7 +3192,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"productId\": 4643,\r\n    \"quantity\": 2\r\n}",
+											"raw": "{\r\n    \"productId\": {{setId}},\r\n    \"quantity\": 2\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -3195,7 +3250,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"productId\": 4643,\r\n    \"quantity\": 2\r\n}",
+											"raw": "{\r\n    \"productId\": {{setId}},\r\n    \"quantity\": 2\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -3248,7 +3303,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"productId\": 4643,\r\n    \"quantity\": 2\r\n}",
+											"raw": "{\r\n    \"productId\": {{setId}},\r\n    \"quantity\": 2\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -3301,7 +3356,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"productId\": 4643,\r\n    \"quantity\": 2\r\n}",
+											"raw": "{\r\n    \"productId\": {{setId}},\r\n    \"quantity\": 2\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -3354,7 +3409,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"productId\": 4643,\r\n    \"quantity\": 2\r\n}",
+											"raw": "{\r\n    \"productId\": {{setId}},\r\n    \"quantity\": 2\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -3619,7 +3674,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"productId\": 4643\r\n}",
+											"raw": "{\r\n    \"productId\": {{setId}}\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -3672,7 +3727,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"productId\": 4643,\r\n    \"quantity\": -2\r\n}",
+											"raw": "{\r\n    \"productId\": {{setId}},\r\n    \"quantity\": -2\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -3725,7 +3780,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"productId\": 4643,\r\n    \"quantity\": 100\r\n}",
+											"raw": "{\r\n    \"productId\": {{setId}},\r\n    \"quantity\": 100\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -3778,7 +3833,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"productId\": 4643,\r\n    \"quantity\": true\r\n}",
+											"raw": "{\r\n    \"productId\": {{setId}},\r\n    \"quantity\": true\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -3831,7 +3886,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"productId\": 4643,\r\n    \"quantity\": \"kazkas\"\r\n}",
+											"raw": "{\r\n    \"productId\": {{setId}},\r\n    \"quantity\": \"kazkas\"\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -4604,7 +4659,7 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\r\n    \"clientName\": \"Donny\",\r\n    \"clientEmail\": \"dolbysss@gmail.com\"\r\n}",
+									"raw": "{\r\n    \"clientName\": \"{{$randomFirstName}}\",\r\n    \"clientEmail\": \"{{$randomEmail}}\"\r\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -4662,7 +4717,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"clientName\": 12345,\r\n    \"clientEmail\": \"donnysas@gmail.com\"\r\n}",
+											"raw": "{\r\n    \"clientName\": 12345,\r\n    \"clientEmail\": \"{{$randomEmail}}\"\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -4712,7 +4767,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"clientName\": true,\r\n    \"clientEmail\": \"donnsday@gmail.com\"\r\n}",
+											"raw": "{\r\n    \"clientName\": true,\r\n    \"clientEmail\": \"{{$randomEmail}}\"\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -4762,7 +4817,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"clientEmail\": \"donny@gmail.com\"\r\n}",
+											"raw": "{\r\n    \"clientEmail\": \"{{$randomEmail}}\"\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -4812,7 +4867,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"clientName\": \"\",\r\n    \"clientEmail\": \"donny@gmail.com\"\r\n}",
+											"raw": "{\r\n    \"clientName\": \"\",\r\n    \"clientEmail\": \"{{$randomEmail}}\"\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -4864,8 +4919,11 @@
 										{
 											"listen": "prerequest",
 											"script": {
-												"packages": {},
-												"type": "text/javascript"
+												"exec": [
+													""
+												],
+												"type": "text/javascript",
+												"packages": {}
 											}
 										}
 									],
@@ -4874,7 +4932,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"clientName\": \"Donny\",\r\n    \"clientEmail\": 12345\r\n}",
+											"raw": "{\r\n    \"clientName\": \"{{$randomFirstName}}\",\r\n    \"clientEmail\": 12345\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -4924,7 +4982,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"clientName\": \"Donny\",\r\n    \"clientEmail\": true\r\n}",
+											"raw": "{\r\n    \"clientName\": \"{{$randomFirstName}}\",\r\n    \"clientEmail\": true\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -4974,7 +5032,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"clientName\": \"Donny\"\r\n}",
+											"raw": "{\r\n    \"clientName\": \"{{$randomFirstName}}\"\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -5024,7 +5082,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"clientName\": \"Donny\",\r\n    \"clientEmail\": \"\"\r\n}",
+											"raw": "{\r\n    \"clientName\": \"{{$randomFirstName}}\",\r\n    \"clientEmail\": \"\"\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -5074,7 +5132,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"clientName\": \"Donny\",\r\n    \"clientEmail\": \"kazkodel12#gmail,com\"\r\n}",
+											"raw": "{\r\n    \"clientName\": \"{{$randomFirstName}}\",\r\n    \"clientEmail\": \"kazkodel12#gmail,com\"\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -5134,20 +5192,11 @@
 								}
 							],
 							"request": {
-								"auth": {
-									"type": "noauth"
-								},
 								"method": "POST",
-								"header": [
-									{
-										"key": "Authorization",
-										"value": "{{authId}}",
-										"type": "text"
-									}
-								],
+								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\r\n    \"cartId\": \"{{cartId}}\",\r\n    \"customerName\": \"Donatas\",\r\n    \"comment\": \"kazkas\"\r\n}",
+									"raw": "{\r\n    \"cartId\": \"{{cartId}}\",\r\n    \"customerName\": \"{{$randomFirstName}}\",\r\n    \"comment\": \"{{$randomWord}}\"\r\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -5215,7 +5264,7 @@
 										],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"cartId\": \"{{cartId}}\",\r\n    \"customerName\": \"Donatas\"\r\n}",
+											"raw": "{\r\n    \"cartId\": \"{{cartId}}\",\r\n    \"customerName\": \"{{$randomFirstName}}\"\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -5275,7 +5324,7 @@
 										],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"cartId\": \"{{cartId}}\",\r\n    \"customerName\": \"Donatas\"\r\n}",
+											"raw": "{\r\n    \"cartId\": \"{{cartId}}\",\r\n    \"customerName\": \"{{$randomFirstName}}\"\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -5339,7 +5388,7 @@
 										],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"customerName\": \"Donatas\"\r\n}",
+											"raw": "{\r\n    \"customerName\": \"{{$randomFirstName}}\"\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -5398,7 +5447,7 @@
 										],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"cartId\": \"\",\r\n    \"customerName\": \"Rokas\"\r\n}",
+											"raw": "{\r\n    \"cartId\": \"\",\r\n    \"customerName\": \"{{$randomFirstName}}\"\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -5457,7 +5506,7 @@
 										],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"cartId\": true,\r\n    \"customerName\": \"Rokas\"\r\n}",
+											"raw": "{\r\n    \"cartId\": true,\r\n    \"customerName\": \"{{$randomFirstName}}\"\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -5516,7 +5565,7 @@
 										],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"cartId\": 99999,\r\n    \"customerName\": \"Rokas\"\r\n}",
+											"raw": "{\r\n    \"cartId\": 99999,\r\n    \"customerName\": \"{{$randomFirstName}}\"\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -5575,7 +5624,7 @@
 										],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"cartId\": \"kazkaip\",\r\n    \"customerName\": \"Rokas\"\r\n}",
+											"raw": "{\r\n    \"cartId\": \"kazkaip\",\r\n    \"customerName\": \"{{$randomFirstName}}\"\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -5880,7 +5929,7 @@
 										],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"cartId\": \"{{cartId}}\",\r\n    \"customerName\": \"Donce\",\r\n    \"comment\": 123456\r\n}",
+											"raw": "{\r\n    \"cartId\": \"{{cartId}}\",\r\n    \"customerName\": \"{{$randomFirstName}}\",\r\n    \"comment\": 123456\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -5939,7 +5988,7 @@
 										],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"cartId\": \"{{cartId}}\",\r\n    \"customerName\": \"Donce\",\r\n    \"comment\": true\r\n}",
+											"raw": "{\r\n    \"cartId\": \"{{cartId}}\",\r\n    \"customerName\": \"{{$randomFirstName}}\",\r\n    \"comment\": true\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -5998,7 +6047,7 @@
 										],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"cartId\": \"{{cartId}}\",\r\n    \"customerName\": \"Donce\",\r\n    \"comment\": \"\"\r\n}",
+											"raw": "{\r\n    \"cartId\": \"{{cartId}}\",\r\n    \"customerName\": \"{{$randomFirstName}}\",\r\n    \"comment\": \"\"\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -6059,7 +6108,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\r\n    \"customerName\": \"Donatas\"\r\n}",
+									"raw": "{\r\n    \"customerName\": \"{{$randomFirstName}}\"\r\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -6128,7 +6177,7 @@
 										],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"customerName\": \"Donatas\"\r\n}",
+											"raw": "{\r\n    \"customerName\": \"{{$randomFirstName}}\"\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -6189,7 +6238,7 @@
 										],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"customerName\": \"Donatas\"\r\n}",
+											"raw": "{\r\n    \"customerName\": \"{{$randomFirstName}}\"\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -6254,7 +6303,7 @@
 										],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"customerName\": \"Donatas\"\r\n}",
+											"raw": "{\r\n    \"customerName\": \"{{$randomFirstName}}\"\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -6504,7 +6553,7 @@
 										],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"customerName\": \"Donce\",\r\n    \"comment\": \"\"\r\n}",
+											"raw": "{\r\n    \"customerName\": \"{{$randomFirstName}}\",\r\n    \"comment\": \"\"\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -6564,7 +6613,7 @@
 										],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"customerName\": \"Donce\",\r\n    \"comment\": 123456\r\n}",
+											"raw": "{\r\n    \"customerName\": \"{{$randomFirstName}}\",\r\n    \"comment\": 123456\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -6624,7 +6673,7 @@
 										],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"customerName\": \"Donce\",\r\n    \"comment\": true\r\n}",
+											"raw": "{\r\n    \"customerName\": \"{{$randomFirstName}}\",\r\n    \"comment\": true\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -7557,6 +7606,21 @@
 			]
 		}
 	],
+	"auth": {
+		"type": "apikey",
+		"apikey": [
+			{
+				"key": "value",
+				"value": "{{authId}}",
+				"type": "string"
+			},
+			{
+				"key": "key",
+				"value": "Authorization",
+				"type": "string"
+			}
+		]
+	},
 	"event": [
 		{
 			"listen": "prerequest",
@@ -7603,6 +7667,22 @@
 		},
 		{
 			"key": "orderId",
+			"value": ""
+		},
+		{
+			"key": "currentStock",
+			"value": ""
+		},
+		{
+			"key": "tooMany",
+			"value": ""
+		},
+		{
+			"key": "replaceId",
+			"value": ""
+		},
+		{
+			"key": "notInStock",
 			"value": ""
 		}
 	]
